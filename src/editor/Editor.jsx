@@ -9,27 +9,44 @@ export const Editor = () => {
   const [el, setEl] = useState(null);
   const [elIndex, setElIndex] = useState(0);
   const [caretIndex, setCaretIndex] = useState(0);
+  const [shiftPressed, setShiftPressed] = useState(false);
 
   useEffect(() => {
-    window.addEventListener("keydown", moveSelectedElement);
-    return () => window.removeEventListener("keydown", moveSelectedElement);
+    window.addEventListener("keydown", keyDown);
+    window.addEventListener("keyup", keyUp);
+    return () => { 
+      window.removeEventListener("keydown", keyDown); 
+      window.removeEventListener("keyup", keyUp); 
+    }
   });
 
   useEffect(() => {
     setEl(document.getElementById(`line-${elIndex}`));
   }, [elIndex]);
 
-  const moveSelectedElement = (e) => {
-    if (e.key === "ArrowUp") {
+  const keyDown = (e) => {
+    console.log(e);
+
+    if (e.key === "ArrowUp" && !shiftPressed && !e.ctrlKey) {
       setElIndex(Math.max(0, elIndex - 1));
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown" && !shiftPressed && !e.ctrlKey) {
       setElIndex(Math.min(elIndex + 1, lines.length - 1));
-    } else if (e.key === "ArrowLeft") {
+    } else if (e.key === "ArrowLeft" && !shiftPressed && !e.ctrlKey) {
       setCaretIndex(Math.max(0, caretIndex - 1));
-    } else if (e.key === "ArrowRight") {
+    } else if (e.key === "ArrowRight" && !shiftPressed && !e.ctrlKey) {
       setCaretIndex(Math.min(caretIndex + 1, el.childNodes[0].length));
+    } else if (e.key === "Shift") {
+      setShiftPressed(true);
+    } else {
+      setCaretIndex(getCaretIndex(el));
     }
   };
+
+  const keyUp = (e) => {
+    if (e.key === "Shift") {
+      setShiftPressed(false);
+    }
+  }
 
   useEffect(() => {
     if (el && el.childNodes.length) {
@@ -52,7 +69,10 @@ export const Editor = () => {
     setEl(el.target);
     const index = el.target.id.split("-")[1];
     setElIndex(Number(index));
-    setCaretIndex(getCaretIndex(el.target));
+
+    const caretIdx = getCaretIndex(el.target);
+    console.log(caretIdx);
+    setCaretIndex(caretIdx);
   };
 
   const getCaretIndex = (element) => {
